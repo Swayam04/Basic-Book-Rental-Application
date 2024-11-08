@@ -1,0 +1,8 @@
+{
+  "properties": [
+    {
+      "name": "google.books.api.key",
+      "type": "java.lang.String",
+      "description": "Holds API key for Google Books API."
+  }
+] }
