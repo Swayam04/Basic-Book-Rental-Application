@@ -3,7 +3,7 @@ target/
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
-run/
+run/BasicBookRentalAppApplication.run.xml
 
 ### STS ###
 .apt_generated
