@@ -4,5 +4,15 @@
       "name": "google.books.api.key",
       "type": "java.lang.String",
       "description": "Holds API key for Google Books API."
-  }
+    },
+    {
+      "name": "jwt.secret",
+      "type": "java.lang.String",
+      "description": "JWT Secret Key."
+    },
+    {
+      "name": "jwt.expiration",
+      "type": "java.lang.Long",
+      "description": "JWT expiration time in milliseconds."
+    }
 ] }

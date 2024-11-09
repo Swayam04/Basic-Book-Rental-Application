@@ -33,22 +33,6 @@ public class CustomUserDetailsService implements UserDetailsService {
         return user;
     }
 
-    public User registerUser(RegisterRequest registerRequest) {
-        if (userRepository.existsByUsername(registerRequest.getUsername())) {
-            throw new RuntimeException("Username already taken");
-        }
-        if (userRepository.existsByEmail(registerRequest.getEmail())) {
-            throw new RuntimeException("Email already taken");
-        }
-        User user = new User();
-        user.setUsername(registerRequest.getUsername());
-        user.setEmail(registerRequest.getEmail());
-        user.setName(registerRequest.getName());
-        user.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
-        logger.debug("Registering user: {}", user);
-        return user;
-    }
-
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     public User promoteToAdmin(String username) {
         User user = userRepository.findByUsername(username);
