@@ -1,8 +1,9 @@
-package practice.bookrentalapp.entities;
+package practice.bookrentalapp.model.entities;
 
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import practice.bookrentalapp.model.enums.RentalStatus;
 
 import java.time.LocalDate;
 import java.util.Set;

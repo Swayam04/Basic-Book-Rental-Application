@@ -6,11 +6,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
-import practice.bookrentalapp.dto.BookSearchRequestDto;
-import practice.bookrentalapp.dto.BookSearchRequestDto.SearchGroup;
-import practice.bookrentalapp.dto.GoogleBooksResponseDto;
-import practice.bookrentalapp.entities.Book;
+import practice.bookrentalapp.model.dto.request.BookSearchRequest;
+import practice.bookrentalapp.model.dto.request.BookSearchRequest.SearchGroup;
+import practice.bookrentalapp.model.dto.response.GoogleBooksResponse;
+import practice.bookrentalapp.model.entities.Book;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
@@ -39,19 +40,25 @@ public class GoogleBooksApiService {
         this.executorService = executorService;
     }
 
-    public List<Long> fetchAndSaveBooks(BookSearchRequestDto requestDto) {
+    public List<Long> fetchAndSaveBooks(BookSearchRequest requestDto) {
+        logger.debug("fetchAndSaveBooks called with requestDto: {}", requestDto);
         copies = requestDto.getCopies();
         try {
             List<Future<List<Book>>> futures = requestDto.getSearchGroups().stream()
-                    .map(group -> executorService.submit(() -> processSearchGroup(group)))
+                    .map(group ->  {
+                        logger.debug("Submitting search task for group: {}", group);
+                        return executorService.submit(() -> processSearchGroup(group));
+                    })
                     .toList();
             List<Book> allBooks = new ArrayList<>();
             for(Future<List<Book>> future : futures) {
                 allBooks.addAll(future.get());
             }
-            return bookService.saveBooksBatch(allBooks).stream()
+            List<Long> savedBookIds = bookService.saveBooksBatch(allBooks).stream()
                     .map(Book::getId)
                     .collect(Collectors.toList());
+            logger.info("Saved books with IDs: {}", savedBookIds);
+            return savedBookIds;
         } catch (Exception e) {
             logger.error("Error processing request {}", e.getMessage());
             return Collections.emptyList();
@@ -68,33 +75,39 @@ public class GoogleBooksApiService {
         }
     }
 
-    private List<Book> searchGoogleBooks(BookSearchRequestDto.SearchGroup searchGroup) {
+    private List<Book> searchGoogleBooks(BookSearchRequest.SearchGroup searchGroup) {
         List<Book> allBooks = new ArrayList<>();
         int startIndex = 0;
         Integer totalItems = null;
-        do {
-            String url = getGoogleBooksApiUrl(searchGroup, startIndex);
-            ResponseEntity<GoogleBooksResponseDto> response = restTemplate.getForEntity(url, GoogleBooksResponseDto.class);
-            GoogleBooksResponseDto responseBody = response.getBody();
+        try {
+            do {
+                String url = getGoogleBooksApiUrl(searchGroup, startIndex);
+                logger.debug("Fetching books from URL: {}", url);
+                ResponseEntity<GoogleBooksResponse> response = restTemplate.getForEntity(url, GoogleBooksResponse.class);
+                GoogleBooksResponse responseBody = response.getBody();
 
-            if (responseBody == null || responseBody.getItems() == null) {
-                break;
-            }
-            if (totalItems == null) {
-                totalItems = responseBody.getTotalItems();
-            }
-            allBooks.addAll(
-                    responseBody.getItems().stream()
-                            .map(this::convertToBook)
-                            .filter(Objects::nonNull)
-                            .toList()
-            );
-            startIndex += PAGE_SIZE;
-        } while (startIndex < totalItems);
+                if (responseBody == null || responseBody.getItems() == null) {
+                    logger.warn("No items found in response for URL: {}", url);
+                    break;
+                }
+                if (totalItems == null) {
+                    totalItems = responseBody.getTotalItems();
+                }
+                allBooks.addAll(
+                        responseBody.getItems().stream()
+                                .map(this::convertToBook)
+                                .filter(Objects::nonNull)
+                                .toList()
+                );
+                startIndex += PAGE_SIZE;
+            } while (startIndex < totalItems);
+        } catch (RestClientException e) {
+            logger.error("Error searching Google Books: {}", e.getMessage(), e);
+        }
         return allBooks;
     }
 
-    private String getGoogleBooksApiUrl(BookSearchRequestDto.SearchGroup searchGroup, int startIndex) {
+    private String getGoogleBooksApiUrl(BookSearchRequest.SearchGroup searchGroup, int startIndex) {
         StringBuilder query = new StringBuilder();
         appendIfPresent(query, "inauthor", searchGroup.getAuthor());
         appendIfPresent(query, "intitle", searchGroup.getTitle());
@@ -118,7 +131,8 @@ public class GoogleBooksApiService {
     }
 
     private List<Book> filterUniqueBooks(List<Book> books) {
-        return books.stream()
+        logger.debug("Filtering unique books from {} books", books.size());
+        List<Book> uniqueBooks = books.stream()
                 .collect(Collectors.groupingBy(
                         Book::getTitle,
                         Collectors.maxBy(Comparator.comparing(
@@ -130,11 +144,14 @@ public class GoogleBooksApiService {
                 .filter(Optional::isPresent)
                 .map(Optional::get)
                 .collect(Collectors.toList());
+        logger.debug("Found {} unique books", uniqueBooks.size());
+        return uniqueBooks;
     }
 
-    private Book convertToBook(GoogleBooksResponseDto.Item item) {
-        GoogleBooksResponseDto.VolumeInfo volumeInfo = item.getVolumeInfo();
+    private Book convertToBook(GoogleBooksResponse.Item item) {
+        GoogleBooksResponse.VolumeInfo volumeInfo = item.getVolumeInfo();
         if (volumeInfo == null || !"en".equals(volumeInfo.getLanguage()) || !"BOOK".equals(volumeInfo.getPrintType())) {
+            logger.debug("Skipping item due to invalid/irrelevant volume info: {}", volumeInfo);
             return null;
         }
         Book book = new Book();
@@ -148,14 +165,15 @@ public class GoogleBooksApiService {
         book.setCategories(new HashSet<>(volumeInfo.getCategories() != null ? volumeInfo.getCategories() : Collections.emptyList()));
         book.setPublishedDate(parsePublishedDate(volumeInfo.getPublishedDate()));
         setISBNIfPresent(volumeInfo, book);
+        logger.debug("Converted item to book: {}", book);
         return book;
     }
 
-    private void setISBNIfPresent(GoogleBooksResponseDto.VolumeInfo volumeInfo, Book book) {
+    private void setISBNIfPresent(GoogleBooksResponse.VolumeInfo volumeInfo, Book book) {
         if(volumeInfo.getIndustryIdentifiers() == null) {
             return;
         }
-        for (GoogleBooksResponseDto.VolumeInfo.IndustryIdentifier identifier : volumeInfo.getIndustryIdentifiers()) {
+        for (GoogleBooksResponse.VolumeInfo.IndustryIdentifier identifier : volumeInfo.getIndustryIdentifiers()) {
             if ("ISBN_13".equalsIgnoreCase(identifier.getType())) {
                 book.setISBN(identifier.getIdentifier());
                 break;

@@ -1,4 +1,4 @@
-package practice.bookrentalapp.dto;
+package practice.bookrentalapp.model.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
@@ -7,7 +7,7 @@ import java.util.List;
 
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class GoogleBooksResponseDto {
+public class GoogleBooksResponse {
     private int totalItems;
     private List<Item> items;
 

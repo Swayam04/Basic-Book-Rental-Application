@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import practice.bookrentalapp.dto.BookSearchRequestDto;
+import practice.bookrentalapp.model.dto.request.BookSearchRequest;
 import practice.bookrentalapp.service.GoogleBooksApiService;
 
 import java.util.List;
@@ -25,8 +25,8 @@ public class BookController {
     }
 
     @PostMapping
-    public ResponseEntity<List<Long>> addBookByAuthorName(@Valid @RequestBody BookSearchRequestDto bookSearchRequestDto) {
-        List<Long> savedBookIds = googleBooksApiService.fetchAndSaveBooks(bookSearchRequestDto);
+    public ResponseEntity<List<Long>> addBookByAuthorName(@Valid @RequestBody BookSearchRequest bookSearchRequest) {
+        List<Long> savedBookIds = googleBooksApiService.fetchAndSaveBooks(bookSearchRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(savedBookIds);
     }
 

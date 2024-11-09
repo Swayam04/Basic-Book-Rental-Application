@@ -1,4 +1,4 @@
-package practice.bookrentalapp.entities;
+package practice.bookrentalapp.model.entities;
 
 import jakarta.persistence.*;
 import lombok.Getter;

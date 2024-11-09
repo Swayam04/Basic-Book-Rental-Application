@@ -1,4 +1,4 @@
-package practice.bookrentalapp.dto;
+package practice.bookrentalapp.model.dto.request;
 
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotEmpty;
@@ -8,7 +8,7 @@ import lombok.Data;
 import java.util.List;
 
 @Data
-public class BookSearchRequestDto {
+public class BookSearchRequest {
     @NotNull
     @NotEmpty(message = "At least one search group must be provided.")
     List<SearchGroup> searchGroups;

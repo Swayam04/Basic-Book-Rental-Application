@@ -4,7 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-import practice.bookrentalapp.entities.Book;
+import practice.bookrentalapp.model.entities.Book;
 
 import java.util.Set;
 
