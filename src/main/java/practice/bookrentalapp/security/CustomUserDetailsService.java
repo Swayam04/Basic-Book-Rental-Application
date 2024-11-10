@@ -4,15 +4,11 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import practice.bookrentalapp.model.dto.request.RegisterRequest;
 import practice.bookrentalapp.model.entities.User;
-import practice.bookrentalapp.model.enums.Role;
 import practice.bookrentalapp.repositories.UserRepository;
 
 @Service
@@ -20,7 +16,6 @@ import practice.bookrentalapp.repositories.UserRepository;
 public class CustomUserDetailsService implements UserDetailsService {
 
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
     private final Logger logger = LoggerFactory.getLogger(CustomUserDetailsService.class);
 
     @Override
@@ -31,16 +26,5 @@ public class CustomUserDetailsService implements UserDetailsService {
             throw new UsernameNotFoundException("User not found with username or email: " + username);
         }
         return user;
-    }
-
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
-    public User promoteToAdmin(String username) {
-        User user = userRepository.findByUsername(username);
-        if (user == null) {
-            throw new UsernameNotFoundException("User not found");
-        }
-        user.setRole(Role.ROLE_ADMIN);
-        logger.info("User {} promoted to admin.", username);
-        return userRepository.save(user);
     }
 }
