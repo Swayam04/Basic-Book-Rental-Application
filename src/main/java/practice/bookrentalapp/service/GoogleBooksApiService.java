@@ -1,7 +1,6 @@
 package practice.bookrentalapp.service;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -21,10 +20,10 @@ import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class GoogleBooksApiService {
     private final BookService bookService;
     private final RestTemplate restTemplate;
-    private final Logger logger = LoggerFactory.getLogger(GoogleBooksApiService.class);
     private final ExecutorService executorService;
 
     private final Integer PAGE_SIZE = 40;
@@ -41,12 +40,12 @@ public class GoogleBooksApiService {
     }
 
     public List<Long> fetchAndSaveBooks(BookSearchRequest requestDto) {
-        logger.debug("fetchAndSaveBooks called with requestDto: {}", requestDto);
+        log.debug("fetchAndSaveBooks called with requestDto: {}", requestDto);
         copies = requestDto.getCopies();
         try {
             List<Future<List<Book>>> futures = requestDto.getSearchGroups().stream()
                     .map(group ->  {
-                        logger.debug("Submitting search task for group: {}", group);
+                        log.debug("Submitting search task for group: {}", group);
                         return executorService.submit(() -> processSearchGroup(group));
                     })
                     .toList();
@@ -57,10 +56,10 @@ public class GoogleBooksApiService {
             List<Long> savedBookIds = bookService.saveBooksBatch(allBooks).stream()
                     .map(Book::getId)
                     .collect(Collectors.toList());
-            logger.info("Saved books with IDs: {}", savedBookIds);
+            log.info("Saved books with IDs: {}", savedBookIds);
             return savedBookIds;
         } catch (Exception e) {
-            logger.error("Error processing request {}", e.getMessage());
+            log.error("Error processing request {}", e.getMessage());
             return Collections.emptyList();
         }
     }
@@ -70,24 +69,24 @@ public class GoogleBooksApiService {
             List<Book> books = searchGoogleBooks(group);
             return filterUniqueBooks(books);
         } catch (Exception e) {
-            logger.error("Error processing search group {}: {}", group, e.getMessage());
+            log.error("Error processing search group {}: {}", group, e.getMessage());
             return Collections.emptyList();
         }
     }
 
-    private List<Book> searchGoogleBooks(BookSearchRequest.SearchGroup searchGroup) {
+    private List<Book> searchGoogleBooks(SearchGroup searchGroup) {
         List<Book> allBooks = new ArrayList<>();
         int startIndex = 0;
         Integer totalItems = null;
         try {
             do {
                 String url = getGoogleBooksApiUrl(searchGroup, startIndex);
-                logger.debug("Fetching books from URL: {}", url);
+                log.debug("Fetching books from URL: {}", url);
                 ResponseEntity<GoogleBooksResponse> response = restTemplate.getForEntity(url, GoogleBooksResponse.class);
                 GoogleBooksResponse responseBody = response.getBody();
 
                 if (responseBody == null || responseBody.getItems() == null) {
-                    logger.warn("No items found in response for URL: {}", url);
+                    log.warn("No items found in response for URL: {}", url);
                     break;
                 }
                 if (totalItems == null) {
@@ -102,7 +101,7 @@ public class GoogleBooksApiService {
                 startIndex += PAGE_SIZE;
             } while (startIndex < totalItems);
         } catch (RestClientException e) {
-            logger.error("Error searching Google Books: {}", e.getMessage(), e);
+            log.error("Error searching Google Books: {}", e.getMessage(), e);
         }
         return allBooks;
     }
@@ -131,7 +130,7 @@ public class GoogleBooksApiService {
     }
 
     private List<Book> filterUniqueBooks(List<Book> books) {
-        logger.debug("Filtering unique books from {} books", books.size());
+        log.debug("Filtering unique books from {} books", books.size());
         List<Book> uniqueBooks = books.stream()
                 .collect(Collectors.groupingBy(
                         Book::getTitle,
@@ -144,14 +143,14 @@ public class GoogleBooksApiService {
                 .filter(Optional::isPresent)
                 .map(Optional::get)
                 .collect(Collectors.toList());
-        logger.debug("Found {} unique books", uniqueBooks.size());
+        log.debug("Found {} unique books", uniqueBooks.size());
         return uniqueBooks;
     }
 
     private Book convertToBook(GoogleBooksResponse.Item item) {
         GoogleBooksResponse.VolumeInfo volumeInfo = item.getVolumeInfo();
         if (volumeInfo == null || !"en".equals(volumeInfo.getLanguage()) || !"BOOK".equals(volumeInfo.getPrintType())) {
-            logger.debug("Skipping item due to invalid/irrelevant volume info: {}", volumeInfo);
+            log.debug("Skipping item due to invalid/irrelevant volume info: {}", volumeInfo);
             return null;
         }
         Book book = new Book();
@@ -165,7 +164,7 @@ public class GoogleBooksApiService {
         book.setCategories(new HashSet<>(volumeInfo.getCategories() != null ? volumeInfo.getCategories() : Collections.emptyList()));
         book.setPublishedDate(parsePublishedDate(volumeInfo.getPublishedDate()));
         setISBNIfPresent(volumeInfo, book);
-        logger.debug("Converted item to book: {}", book);
+        log.debug("Converted item to book: {}", book);
         return book;
     }
 
@@ -192,7 +191,7 @@ public class GoogleBooksApiService {
                 default -> null;
             };
         } catch (DateTimeParseException e) {
-            logger.warn("Unable to parse published date: {}", dateStr);
+            log.warn("Unable to parse published date: {}", dateStr);
             return null;
         }
     }

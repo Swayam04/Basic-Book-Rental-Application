@@ -1,9 +1,8 @@
 package practice.bookrentalapp.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.coyote.BadRequestException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -23,15 +22,17 @@ import practice.bookrentalapp.utils.EntityDtoMapper;
 
 @Service
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
+@Slf4j
 public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final AuthenticationManager authenticationManager;
     private final EntityDtoMapper entityDtoMapper;
-    private static final Logger logger = LoggerFactory.getLogger(AuthService.class);
 
     public AuthResponse register(RegisterRequest registerRequest) throws BadRequestException {
+        log.debug("Starting registration for username: {}", registerRequest.getUsername());
+
         if(userRepository.existsByUsername(registerRequest.getUsername())) {
             throw new BadRequestException("Username is already in use");
         }
@@ -40,18 +41,30 @@ public class AuthService {
         }
         User user = createUser(registerRequest);
         User savedUser = userRepository.save(user);
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        registerRequest.getUsername(),
-                        registerRequest.getPassword()
-                )
-        );
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        String jwt = jwtTokenProvider.generateToken(savedUser);
-        return new AuthResponse(jwt, "Bearer", entityDtoMapper.mapToUserDto(savedUser));
+        log.debug("User saved successfully: {}", savedUser.getUsername());
+
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            registerRequest.getUsername(),
+                            registerRequest.getPassword()
+                    )
+            );
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            log.debug("User authenticated successfully after registration");
+            String jwt = jwtTokenProvider.generateToken(savedUser);
+            log.debug("JWT token generated for new user");
+
+            return new AuthResponse(jwt, "Bearer", entityDtoMapper.mapToUserDto(savedUser));
+        } catch (AuthenticationException e) {
+            log.error("Authentication failed after registration", e);
+            throw new BadRequestException("Authentication failed after registration");
+        }
     }
 
     public AuthResponse login(LoginRequest request) throws BadRequestException {
+        log.debug("Attempting login for user: {}", request.getUsernameOrEmail());
+
         try {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
@@ -59,13 +72,21 @@ public class AuthService {
                             request.getPassword()
                     )
             );
+
             SecurityContextHolder.getContext().setAuthentication(authentication);
             User user = (User) authentication.getPrincipal();
+            log.debug("User authenticated successfully: {}", user.getUsername());
+
             String jwt = jwtTokenProvider.generateToken(user);
+            log.debug("JWT token generated successfully");
+
+            String usernameFromToken = jwtTokenProvider.getUsernameFromToken(jwt);
+            log.debug("Username extracted from generated token: {}", usernameFromToken);
 
             return new AuthResponse(jwt, "Bearer", entityDtoMapper.mapToUserDto(user));
 
         } catch (AuthenticationException e) {
+            log.error("Authentication failed for user: {}", request.getUsernameOrEmail(), e);
             throw new BadRequestException("Invalid username/email or password");
         }
     }
@@ -77,7 +98,7 @@ public class AuthService {
         user.setName(request.getName());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setRole(Role.ROLE_USER);
-        logger.debug("Creating new user: {}", user.getUsername());
+        log.debug("Creating new user: {}", user.getUsername());
         return user;
     }
 

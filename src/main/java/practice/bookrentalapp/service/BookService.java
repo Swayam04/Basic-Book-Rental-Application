@@ -1,7 +1,7 @@
 package practice.bookrentalapp.service;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,9 +14,9 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class BookService {
     private final BookRepository bookRepository;
-    private static final Logger logger = LoggerFactory.getLogger(BookService.class);
 
     @Autowired
     public BookService(BookRepository bookRepository) {
@@ -25,7 +25,7 @@ public class BookService {
 
     @Transactional
     public List<Book> saveBooksBatch(List<Book> books) {
-        logger.info("Saving unique books from a batch of size {}", books.size());
+        log.info("Saving unique books from a batch of size {}", books.size());
         Set<String> titles = books.stream().map(Book::getTitle).collect(Collectors.toSet());
         Set<String> isbn = books.stream()
                 .map(Book::getISBN)
@@ -36,7 +36,7 @@ public class BookService {
         List<Book> newBooks = books.stream()
                 .filter(book -> !existingTitles.contains(book.getTitle()))
                 .collect(Collectors.toList());
-        logger.info("Found {} unique books to be saved", newBooks.size());
+        log.info("Found {} unique books to be saved", newBooks.size());
         return bookRepository.saveAll(newBooks);
     }
 }

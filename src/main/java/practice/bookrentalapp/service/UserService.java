@@ -1,8 +1,7 @@
 package practice.bookrentalapp.service;
 
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
@@ -19,11 +18,11 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
+@Slf4j
 public class UserService {
     private final UserRepository userRepository;
     private final RentalRepository rentalRepository;
     private final EntityDtoMapper entityDtoMapper;
-    private static final Logger logger = LoggerFactory.getLogger(UserService.class);
 
     public User promoteToAdmin(String username) {
         User user = userRepository.findByUsername(username);
@@ -31,7 +30,7 @@ public class UserService {
             throw new UsernameNotFoundException("User not found");
         }
         user.setRole(Role.ROLE_ADMIN);
-        logger.info("User {} promoted to admin.", username);
+        log.info("User {} promoted to admin.", username);
         return userRepository.save(user);
     }
 
