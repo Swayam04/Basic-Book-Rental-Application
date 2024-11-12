@@ -80,9 +80,6 @@ public class AuthService {
             String jwt = jwtTokenProvider.generateToken(user);
             log.debug("JWT token generated successfully");
 
-            String usernameFromToken = jwtTokenProvider.getUsernameFromToken(jwt);
-            log.debug("Username extracted from generated token: {}", usernameFromToken);
-
             return new AuthResponse(jwt, "Bearer", entityDtoMapper.mapToUserDto(user));
 
         } catch (AuthenticationException e) {

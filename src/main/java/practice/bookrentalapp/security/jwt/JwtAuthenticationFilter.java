@@ -32,12 +32,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @NonNull FilterChain filterChain) throws ServletException, IOException {
         try {
             String jwt = getJwtFromRequest(request);
-            log.debug("Extracted JWT token: {}", jwt); // Add logging
+            log.debug("Extracted JWT token: {}", jwt);
 
             if (StringUtils.hasText(jwt)) {
                 if (tokenProvider.validateToken(jwt)) {
                     String username = tokenProvider.getUsernameFromToken(jwt);
-                    log.debug("Username extracted from token: {}", username); // Add logging
+                    log.debug("Username extracted from token: {}", username);
 
                     if (StringUtils.hasText(username)) {
                         UserDetails userDetails = userDetailsService.loadUserByUsername(username);

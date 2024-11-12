@@ -38,17 +38,13 @@ public class JwtTokenProvider {
         claims.put("email", user.getEmail());
         claims.put("sub", user.getUsername());
 
-        String token = Jwts.builder()
+        return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(user.getUsername())
                 .setIssuedAt(now)
                 .setExpiration(expiryDate)
                 .signWith(getSecretKey(), SignatureAlgorithm.HS512)
                 .compact();
-        String username = getUsernameFromToken(token);
-        log.info("Generated token for user: {}", user.getUsername());
-        log.info("Immediate token verification - Username: {}", username);
-        return token;
     }
 
     public boolean validateToken(String token) {
