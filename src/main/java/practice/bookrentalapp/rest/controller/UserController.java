@@ -1,34 +1,51 @@
 package practice.bookrentalapp.rest.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import practice.bookrentalapp.model.dto.entityDtos.UserDto;
+import practice.bookrentalapp.model.dto.request.UpdateUserProfileRequest;
+import practice.bookrentalapp.model.dto.response.UpdateUserProfileResponse;
 import practice.bookrentalapp.model.entities.User;
-import practice.bookrentalapp.repositories.UserRepository;
-import practice.bookrentalapp.utils.EntityDtoMapper;
+import practice.bookrentalapp.service.UserService;
+
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/user")
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 public class UserController {
-    private final UserRepository userRepository;
-    private final EntityDtoMapper entityDtoMapper;
+    private final UserService userService;
 
     @GetMapping("/profile")
     public ResponseEntity<UserDto> getCurrentUserProfile() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication != null
-            && authentication.isAuthenticated()
-            && authentication.getPrincipal() instanceof User user) {
-            return ResponseEntity.ok(entityDtoMapper.mapToUserDto(user));
+        Optional<User> loggedInUser = Optional.ofNullable(isAuthenticated());
+        if (loggedInUser.isPresent()) {
+            return ResponseEntity.ok(userService.getCurrentUser(loggedInUser.get().getId()));
         }
         throw new RuntimeException("No authenticated users");
     }
-    
+
+    @PutMapping("/profile")
+    public ResponseEntity<UpdateUserProfileResponse> updateUserProfile(@Valid @RequestBody UpdateUserProfileRequest updateRequest) {
+        Optional<User> loggedInUser = Optional.ofNullable(isAuthenticated());
+        if (loggedInUser.isPresent()) {
+            return ResponseEntity.ok(userService.updateUser(loggedInUser.get().getId(), updateRequest));
+        }
+        throw new RuntimeException("No authenticated users");
+    }
+
+    private User isAuthenticated() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if(authentication != null
+                && authentication.isAuthenticated()
+                && authentication.getPrincipal() instanceof User user) {
+            return user;
+        }
+        return null;
+    }
 }

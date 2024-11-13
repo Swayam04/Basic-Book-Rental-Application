@@ -9,7 +9,6 @@ import practice.bookrentalapp.model.entities.User;
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
     User findByUsernameOrEmail(String username, String email);
-    User findByUsername(String username);
     boolean existsByUsername(String username);
 
     boolean existsByEmail(@NotBlank @Email String email);
