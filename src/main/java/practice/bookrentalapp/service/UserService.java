@@ -52,7 +52,7 @@ public class UserService {
 
         UpdateUserProfileResponse response = new UpdateUserProfileResponse();
 
-        updateField(request.getNewName(), user::setName, response::setUpdatedName, user::getUsername);
+        updateField(request.getNewName(), user::setName, response::setUpdatedName, user::getName);
         updateField(request.getNewEmail(), user::setEmail, response::setUpdatedEmail, user::getEmail);
         updateField(request.getNewUsername(), user::setUsername, response::setUpdatedUsername, user::getUsername);
 
@@ -60,11 +60,14 @@ public class UserService {
         return response;
     }
 
-    private <T> void updateField(T newValue, Consumer<T> setter, Consumer<T> responseSetter, Supplier<T> getter) {
+    private void updateField(String newValue, Consumer<String> setter, Consumer<String> responseSetter, Supplier<String> getter) {
         if (newValue != null) {
             setter.accept(newValue);
             responseSetter.accept(getter.get());
+        } else {
+            responseSetter.accept("No Change");
         }
+
     }
 
 
