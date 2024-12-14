@@ -14,8 +14,7 @@ import java.util.Set;
 @Table(name = "books")
 public class Book extends BaseEntity {
     private String title;
-    @Convert(converter = StringSetConverter.class)
-    @Column(columnDefinition = "TEXT")
+    @ElementCollection
     private Set<String> authors;
     private String publisher;
     private LocalDate publishedDate;
@@ -23,8 +22,7 @@ public class Book extends BaseEntity {
     private Integer pageCount;
     private Double averageRating;
     private String language;
-    @Convert(converter = StringSetConverter.class)
-    @Column(columnDefinition = "TEXT")
+    @ElementCollection
     private Set<String> categories;
     private Integer copies;
 }

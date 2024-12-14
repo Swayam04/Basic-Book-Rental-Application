@@ -1,7 +1,6 @@
 package practice.bookrentalapp.model.entities;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
@@ -23,10 +22,11 @@ public class User extends BaseEntity implements UserDetails {
     private String name;
     @NotBlank
     @Size(max = 50)
-    @Email
+    @Column(unique = true)
     private String email;
     @NotBlank
     @Size(min = 5, max = 20)
+    @Column(unique = true)
     private String username;
     @NotBlank
     @Size(min = 8, max = 120)
