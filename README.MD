@@ -26,9 +26,8 @@ This is a Spring Boot-based REST API designed for managing book rentals, user ac
 
 ### Book Management
 #### Public Endpoints
-- `GET /api/books` – List all books with pagination and filtering.
+- `GET /api/books` – List all books with pagination and filtering based on provided optional query params.
 - `GET /api/books/{id}` – View details of a specific book.
-- `GET /api/books/search` – Search for books with filters (e.g., available, title, author, ISBN, category).
 
 #### Admin Endpoints
 - `POST /api/admin/books` – Add a new book (details fetched from the Google Books API).

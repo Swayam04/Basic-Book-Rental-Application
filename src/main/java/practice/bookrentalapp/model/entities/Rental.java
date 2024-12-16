@@ -26,5 +26,6 @@ public class Rental extends BaseEntity {
     private LocalDate issueDate;
     private LocalDate returnDate;
     private LocalDate dueDate;
+    @Enumerated(EnumType.STRING)
     private RentalStatus status;
 }

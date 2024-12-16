@@ -30,7 +30,7 @@ public class UserController {
         throw new RuntimeException("No authenticated users");
     }
 
-    @PutMapping("/profile")
+    @PatchMapping("/profile")
     public ResponseEntity<UpdateUserProfileResponse> updateUserProfile(@Valid @RequestBody UpdateUserProfileRequest updateRequest) {
         Optional<User> loggedInUser = Optional.ofNullable(isAuthenticated());
         if (loggedInUser.isPresent()) {

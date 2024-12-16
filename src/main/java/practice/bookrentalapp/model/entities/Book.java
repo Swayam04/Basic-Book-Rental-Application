@@ -3,7 +3,6 @@ package practice.bookrentalapp.model.entities;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-import practice.bookrentalapp.utils.StringSetConverter;
 
 import java.time.LocalDate;
 import java.util.Set;
@@ -24,5 +23,6 @@ public class Book extends BaseEntity {
     private String language;
     @ElementCollection
     private Set<String> categories;
-    private Integer copies;
+    private Integer totalCopies;
+    private Integer copiesLent = 0;
 }

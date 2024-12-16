@@ -17,8 +17,8 @@ public interface BookRepository extends JpaRepository<Book, Long> {
     Set<String> findExistingTitlesByTitleOrIsbn(@Param("titles") Set<String> titles, @Param("isbns") Set<String> isbns);
 
     @Query("SELECT DISTINCT b FROM Book b " +
-            "LEFT JOIN b.authors a ON :author IS NOT NULL " +
-            "LEFT JOIN b.categories c ON :categories IS NOT NULL " +
+            "LEFT JOIN b.authors a " +
+            "LEFT JOIN b.categories c " +
             "WHERE (:author IS NULL OR LOWER(a) = LOWER(:author)) " +
             "AND (:categories IS NULL OR c IN :categories) " +
             "AND (:title IS NULL OR LOWER(b.title) = LOWER(:title)) " +
@@ -31,7 +31,7 @@ public interface BookRepository extends JpaRepository<Book, Long> {
       @Param("author") String author,
       @Param("isbn") String isbn,
       @Param("available") Boolean available,
-      @Param("genres") List<String> categories,
+      @Param("categories") List<String> categories,
       @Param("minRating") Double minRating,
       Pageable pageable
     );

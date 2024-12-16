@@ -154,7 +154,7 @@ public class GoogleBooksApiService {
             return null;
         }
         Book book = new Book();
-        book.setCopies(copies);
+        book.setTotalCopies(copies);
         book.setTitle(volumeInfo.getTitle());
         book.setPageCount(volumeInfo.getPageCount());
         book.setLanguage("en");

@@ -42,7 +42,7 @@ public class EntityDtoMapper {
         dto.setPublisher(book.getPublisher());
         dto.setPageCount(book.getPageCount());
         dto.setAverageRating(book.getAverageRating());
-        dto.setAvailableCopies(book.getCopies());
+        dto.setAvailableCopies(book.getTotalCopies() - book.getCopiesLent());
         return dto;
     }
 
