@@ -85,6 +85,7 @@ public class UserService {
         return userRepository.findById(userId).map(entityDtoMapper::mapToUserDto).orElseThrow(IllegalArgumentException::new);
     }
 
+    @Transactional(readOnly = true)
     public Page<UserDto> findUsersWithFilter(UserFilter userFilter) {
         if (userFilter == null) {
             userFilter = new UserFilter();

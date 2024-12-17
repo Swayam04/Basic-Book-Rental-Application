@@ -7,6 +7,7 @@ import java.util.Set;
 
 @Data
 public class PageBookResponse {
+    private Long bookId;
     private String title;
     private Set<String> authors;
     private String publisher;

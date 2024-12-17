@@ -12,7 +12,7 @@ import practice.bookrentalapp.model.dto.response.PageBookResponse;
 import practice.bookrentalapp.service.BookService;
 
 @RestController
-@RequestMapping("api/books")
+@RequestMapping("/api/books")
 @Slf4j
 public class BookController {
     private final BookService bookService;

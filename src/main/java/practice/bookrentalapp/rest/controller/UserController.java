@@ -7,13 +7,17 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import practice.bookrentalapp.exceptions.UserNotAuthenticatedException;
 import practice.bookrentalapp.model.dto.entityDtos.UserDto;
 import practice.bookrentalapp.model.dto.request.UpdateUserProfileRequest;
 import practice.bookrentalapp.model.dto.response.UpdateUserProfileResponse;
 import practice.bookrentalapp.model.entities.User;
 import practice.bookrentalapp.service.UserService;
+import practice.bookrentalapp.utils.LoginChecker;
 
 import java.util.Optional;
+
+import static practice.bookrentalapp.utils.LoginChecker.isAuthenticated;
 
 @RestController
 @RequestMapping("/api/user")
@@ -23,29 +27,19 @@ public class UserController {
 
     @GetMapping("/profile")
     public ResponseEntity<UserDto> getCurrentUserProfile() {
-        Optional<User> loggedInUser = Optional.ofNullable(isAuthenticated());
-        if (loggedInUser.isPresent()) {
-            return ResponseEntity.ok(userService.getCurrentUser(loggedInUser.get().getId()));
+        User loggedInUser = isAuthenticated();
+        if (loggedInUser == null) {
+            throw new UserNotAuthenticatedException("User is not authenticated");
         }
-        throw new RuntimeException("No authenticated users");
+        return ResponseEntity.ok(userService.getCurrentUser(loggedInUser.getId()));
     }
 
     @PatchMapping("/profile")
     public ResponseEntity<UpdateUserProfileResponse> updateUserProfile(@Valid @RequestBody UpdateUserProfileRequest updateRequest) {
-        Optional<User> loggedInUser = Optional.ofNullable(isAuthenticated());
-        if (loggedInUser.isPresent()) {
-            return ResponseEntity.ok(userService.updateUser(loggedInUser.get().getId(), updateRequest));
+        User loggedInUser = isAuthenticated();
+        if (loggedInUser == null) {
+            throw new UserNotAuthenticatedException("User is not authenticated");
         }
-        throw new RuntimeException("No authenticated users");
-    }
-
-    private User isAuthenticated() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication != null
-                && authentication.isAuthenticated()
-                && authentication.getPrincipal() instanceof User user) {
-            return user;
-        }
-        return null;
+        return ResponseEntity.ok(userService.updateUser(loggedInUser.getId(), updateRequest));
     }
 }

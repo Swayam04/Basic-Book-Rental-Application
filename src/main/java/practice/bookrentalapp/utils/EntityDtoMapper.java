@@ -26,7 +26,7 @@ public class EntityDtoMapper {
         RentalDto dto = new RentalDto();
         dto.setId(rental.getId());
         dto.setBookTitles(new ArrayList<>(rental.getBooks().stream().map(Book::getTitle).toList()));
-        dto.setUser(mapToUserDto(rental.getUser()));
+        dto.setUsername(rental.getUser().getUsername());
         dto.setStatus(rental.getStatus());
         dto.setDueDate(rental.getDueDate());
         dto.setIssueDate(rental.getIssueDate());

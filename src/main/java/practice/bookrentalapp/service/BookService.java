@@ -71,6 +71,7 @@ public class BookService {
         );
         return books.map(book -> {
             PageBookResponse bookResponse = new PageBookResponse();
+            bookResponse.setBookId(book.getId());
             bookResponse.setTitle(book.getTitle());
             bookResponse.setAuthors(book.getAuthors());
             bookResponse.setPublisher(book.getPublisher());

@@ -1,7 +1,6 @@
 package practice.bookrentalapp.model.dto.entityDtos;
 
 import lombok.Data;
-import practice.bookrentalapp.model.entities.Book;
 import practice.bookrentalapp.model.enums.RentalStatus;
 
 import java.time.LocalDate;
@@ -14,5 +13,5 @@ public class RentalDto {
     private LocalDate dueDate;
     private RentalStatus status;
     private List<String> bookTitles;
-    private UserDto user;
+    private String username;
 }
