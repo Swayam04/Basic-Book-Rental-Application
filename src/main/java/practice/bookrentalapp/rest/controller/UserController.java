@@ -4,8 +4,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import practice.bookrentalapp.exceptions.UserNotAuthenticatedException;
 import practice.bookrentalapp.model.dto.entityDtos.UserDto;
@@ -13,9 +11,6 @@ import practice.bookrentalapp.model.dto.request.UpdateUserProfileRequest;
 import practice.bookrentalapp.model.dto.response.UpdateUserProfileResponse;
 import practice.bookrentalapp.model.entities.User;
 import practice.bookrentalapp.service.UserService;
-import practice.bookrentalapp.utils.LoginChecker;
-
-import java.util.Optional;
 
 import static practice.bookrentalapp.utils.LoginChecker.isAuthenticated;
 

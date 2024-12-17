@@ -18,39 +18,134 @@ This is a Spring Boot-based REST API designed for managing book rentals, user ac
 - `POST /api/auth/register` – Create a new user account.
 - `POST /api/auth/login` – Log in with JWT-based authentication.
 
+---
+
 ### User Profile Management
-- `GET /api/users/profile` – View current user's profile.
-- `PUT /api/users/profile` – Update user profile (name, email, username).
-- `PUT /api/users/password` – Change password (requires current password).
-- `DELETE /api/users/profile` – Deactivate user account.
+- `GET /api/user/profile` – View the current user's profile.
+- `PATCH /api/user/profile` – Update user profile details (e.g., name, email, username).
+
+---
 
 ### Book Management
+
 #### Public Endpoints
-- `GET /api/books` – List all books with pagination and filtering based on provided optional query params.
+- `GET /api/books` – List all books with pagination and optional filters.  
+  **Example Request**:
+   ```
+   GET /api/books?title=harry&author=rowling&ratingGreaterThan=4&page=0&size=5&orderBy=title&dir=asc
+   ```  
+  **Response**:  
+  A paginated list of books filtered by the title "harry", author "rowling", and a minimum rating of 4.
+
 - `GET /api/books/{id}` – View details of a specific book.
 
 #### Admin Endpoints
-- `POST /api/admin/books` – Add a new book (details fetched from the Google Books API).
-- `PUT /api/admin/books/{id}` – Update book details.
+- `POST /api/admin/books` – Add new books by author name, title, or ISBN using Google Books API.  
+  **Example Request**:
+   ```json
+   {
+     "searchGroups": [
+       { "author": "J.K. Rowling", "title": "Harry Potter" }
+     ],
+     "copies": 5
+   }
+   ```
+  **Response**:  
+  List of saved book IDs.
+
+- `PATCH /api/admin/books/{id}` – Update details of a specific book.
 - `DELETE /api/admin/books/{id}` – Remove a book.
-- `PATCH /api/admin/books/{id}/copies` – Update the number of copies available.
+
+---
 
 ### Rental Management
+
 #### User Endpoints
-- `GET /api/rentals` – List current and past rentals of the user.
+- `GET /api/rentals` – View all rentals for the currently logged-in user with optional filters.  
+  **Example Request**:
+   ```
+   GET /api/rentals?status=ACTIVE&dueDateBefore=2024-12-01&page=0&size=10
+   ```  
+  **Response**:  
+  A paginated list of active rentals due before `2024-12-01`.
+
 - `GET /api/rentals/{id}` – View details of a specific rental.
-- `POST /api/rentals` – Create a new rental (supports multiple books).
-- `PATCH /api/rentals/{id}/return` – Return rented book(s).
+- `POST /api/rentals` – Create a new rental for multiple books with duration provided in days.  
+  **Example Request**:
+   ```json
+   {
+     "bookIds": [1, 2, 3],
+     "rentalDuration": 60
+   }
+   ```
+
+- `PATCH /api/rentals/{id}/return` – Return rented books.
 
 #### Admin Endpoints
-- `GET /api/admin/rentals` – View all rentals with filtering options.
-- `DELETE /api/admin/rentals/{id}` – Delete a completed rental record.
+- `GET /api/admin/rentals` – View all rentals with filters like status, dates, and book title.  
+  **Example Request**:
+   ```
+   GET /api/admin/rentals?status=COMPLETED&issueDateAfter=2024-01-01&page=0&size=5
+   ```
+
+---
 
 ### Admin User Management
-- `GET /api/admin/users` – View all users.
+- `GET /api/admin/users` – List all users with filtering options (e.g., name, role, rented book).  
+  **Example Request**:
+   ```
+   GET /api/admin/users?role=USER&rentalsGreaterThan=3&page=0&size=10&orderBy=name&dir=desc
+   ```
 - `GET /api/admin/users/{id}` – View details of a specific user.
-- `DELETE /api/admin/users/{id}` – Remove a user.
-- `PATCH /api/admin/users/{id}/role` – Update user role (promote/demote).
+- `PATCH /api/admin/users/{id}` – Promote a user to admin.
+
+---
+
+## Request DTO Examples
+
+### Book Filter (for GET `/api/books`)
+```json
+{
+  "title": "harry",
+  "author": "rowling",
+  "isbn": "978-3-16-148410-0",
+  "available": true,
+  "categories": ["Fantasy"],
+  "ratingGreaterThan": 4.5,
+  "page": 0,
+  "size": 10,
+  "orderBy": "title",
+  "dir": "asc"
+}
+```
+
+### Rental Filter (for Admin `/api/admin/rentals` or User `/api/rentals`)
+```json
+{
+  "status": "ACTIVE",
+  "issueDateBefore": "2024-12-01",
+  "dueDateAfter": "2024-01-01",
+  "bookTitle": "Harry Potter",
+  "page": 0,
+  "size": 5,
+  "orderBy": "dueDate",
+  "dir": "desc"
+}
+```
+
+### User Filter (for `/api/admin/users`)
+```json
+{
+  "name": "John",
+  "role": "USER",
+  "rentalsGreaterThan": 2,
+  "rentedAfter": "2024-01-01",
+  "page": 0,
+  "size": 10,
+  "orderBy": "name",
+  "dir": "asc"
+}
+```
 
 ## Planned Enhancements
 - **JWT Refresh Tokens**: Implement refresh tokens for better session management.
